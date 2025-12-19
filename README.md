@@ -1,5 +1,10 @@
 # User Registration API
 
+[![CI/CD](https://github.com//mehdibennis/user_registration_api/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/mehdibennis/user_registration_api/actions)
+[![codecov](https://codecov.io/github/mehdibennis/user_registration_api/branch/main/graph/badge.svg)](https://codecov.io/github/mehdibennis/user_registration_api)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
+[![Coverage 98%](https://img.shields.io/badge/coverage-98%25-brightgreen.svg)](https://codecov.io/gh/mehdibennis/user_registration_api)
+
 ## Overview
 This project implements a User Registration API using FastAPI, following Clean Architecture principles (Hexagonal Architecture).
 
