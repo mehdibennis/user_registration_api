@@ -10,9 +10,9 @@ class ConsoleEmailService(EmailService):
         # In a real scenario, this would make an HTTP call to a 3rd party SMTP service
         # or use an SMTP library to send the email.
         # For this exercise, we print to console as allowed by specs.
-        print(f"==================================================")
+        print("==================================================")
         print(f"EMAIL TO: {email}")
-        print(f"SUBJECT: Activate your account")
+        print("SUBJECT: Activate your account")
         print(f"BODY: Your activation code is: {code}")
-        print(f"==================================================")
+        print("==================================================")
         logger.info(f"Sent activation code {code} to {email}")

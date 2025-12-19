@@ -112,6 +112,27 @@ curl -X POST http://localhost:8000/api/v1/users/activate \
 
 ## Development
 
+### CI/CD & Code Quality
+This project uses GitHub Actions for Continuous Integration and Deployment. The pipeline includes:
+- **Linting**: Ruff & Black
+- **Type Checking**: MyPy
+- **Testing**: Pytest with coverage requirements (>90%)
+- **Security**: Safety & Bandit checks
+- **Docker**: Build verification
+
+#### Pre-commit Hooks
+To ensure code quality before committing, you can install pre-commit hooks:
+
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install hooks
+pre-commit install
+```
+
+This will automatically run formatting and linting checks on every commit.
+
 ### Available Make Commands
 ```bash
 make help          # Show all available commands
