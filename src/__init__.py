@@ -1,3 +1,3 @@
-from src.core.logging import StructuredLogger, get_logger
+from src.core.logging import get_logger, setup_logging
 
-__all__ = ["get_logger", "StructuredLogger"]
+__all__ = ["get_logger", "setup_logging"]

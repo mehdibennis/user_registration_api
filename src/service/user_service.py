@@ -40,11 +40,11 @@ class UserService:
         Raises:
             UserAlreadyExistsError: If a user with this email already exists.
         """
-        logger.info("Attempting to register user", email=email)
+        logger.info(f"Attempting to register user: {email}")
 
         existing_user = await self.user_repo.get_by_email(email)
         if existing_user:
-            logger.warning("Registration failed: user already exists", email=email)
+            logger.warning(f"Registration failed: user already exists: {email}")
             raise UserAlreadyExistsError(email)
 
         password_hash = SecurityService.get_password_hash(password)
@@ -63,9 +63,7 @@ class UserService:
         await self.user_repo.save(new_user)
         await self.email_service.send_activation_code(email, activation_code)
 
-        logger.info(
-            "User registered successfully", email=email, user_id=str(new_user.id)
-        )
+        logger.info(f"User registered successfully: {email} (ID: {new_user.id})")
         return new_user
 
     async def activate_user(self, email: str, code: str) -> User:
@@ -85,25 +83,25 @@ class UserService:
             InvalidActivationCodeError: If the code doesn't match.
             ActivationCodeExpiredError: If the code has expired.
         """
-        logger.info("Attempting to activate user", email=email)
+        logger.info(f"Attempting to activate user: {email}")
 
         user = await self.user_repo.get_by_email(email)
         if not user:
-            logger.warning("Activation failed: user not found", email=email)
+            logger.warning(f"Activation failed: user not found: {email}")
             raise UserNotFoundError(email)
 
         if user.is_active:
-            logger.warning("Activation failed: user already active", email=email)
+            logger.warning(f"Activation failed: user already active: {email}")
             raise UserAlreadyActivatedError(email)
 
         if user.activation_code != code:
-            logger.warning("Activation failed: invalid code", email=email)
+            logger.warning(f"Activation failed: invalid code: {email}")
             raise InvalidActivationCodeError()
 
         if user.activation_code_expires_at and datetime.now(
             timezone.utc
         ) > user.activation_code_expires_at.replace(tzinfo=timezone.utc):
-            logger.warning("Activation failed: code expired", email=email)
+            logger.warning(f"Activation failed: code expired: {email}")
             raise ActivationCodeExpiredError()
 
         user.is_active = True
@@ -112,7 +110,7 @@ class UserService:
 
         await self.user_repo.update(user)
 
-        logger.info("User activated successfully", email=email, user_id=str(user.id))
+        logger.info(f"User activated successfully: {email} (ID: {user.id})")
         return user
 
     async def regenerate_activation_code(self, email: str) -> User:
@@ -129,15 +127,15 @@ class UserService:
             UserNotFoundError: If no user with this email exists.
             UserAlreadyActivatedError: If the user is already active.
         """
-        logger.info("Attempting to regenerate activation code", email=email)
+        logger.info(f"Attempting to regenerate activation code: {email}")
 
         user = await self.user_repo.get_by_email(email)
         if not user:
-            logger.warning("Regeneration failed: user not found", email=email)
+            logger.warning(f"Regeneration failed: user not found: {email}")
             raise UserNotFoundError(email)
 
         if user.is_active:
-            logger.warning("Regeneration failed: user already active", email=email)
+            logger.warning(f"Regeneration failed: user already active: {email}")
             raise UserAlreadyActivatedError(email)
 
         activation_code = f"{secrets.randbelow(10000):04d}"
@@ -149,5 +147,5 @@ class UserService:
         await self.user_repo.update(user)
         await self.email_service.send_activation_code(email, activation_code)
 
-        logger.info("Activation code regenerated", email=email, user_id=str(user.id))
+        logger.info(f"Activation code regenerated: {email} (ID: {user.id})")
         return user

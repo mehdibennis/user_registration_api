@@ -11,4 +11,3 @@ class SecurityService:
     @staticmethod
     def get_password_hash(password: str) -> str:
         return pwd_context.hash(password)  # type: ignore[no-any-return]
-
