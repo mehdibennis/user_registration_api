@@ -1,6 +1,9 @@
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
+from typing import Optional
+
+from fastapi import BackgroundTasks
 
 from src.core.logging import get_logger
 from src.domain.exceptions import (
@@ -26,13 +29,19 @@ class UserService:
         self.user_repo = user_repo
         self.email_service = email_service
 
-    async def register_user(self, email: str, password: str) -> User:
+    async def register_user(
+        self,
+        email: str,
+        password: str,
+        background_tasks: Optional[BackgroundTasks] = None,
+    ) -> User:
         """
         Register a new user and send activation email.
 
         Args:
             email: User's email address.
             password: User's plain text password.
+            background_tasks: FastAPI BackgroundTasks for async email sending.
 
         Returns:
             The newly created User object.
@@ -47,7 +56,7 @@ class UserService:
             logger.warning(f"Registration failed: user already exists: {email}")
             raise UserAlreadyExistsError(email)
 
-        password_hash = SecurityService.get_password_hash(password)
+        password_hash = await SecurityService.get_password_hash(password)
         activation_code = f"{secrets.randbelow(10000):04d}"
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=1)
 
@@ -61,7 +70,14 @@ class UserService:
         )
 
         await self.user_repo.save(new_user)
-        await self.email_service.send_activation_code(email, activation_code)
+
+        if background_tasks:
+            background_tasks.add_task(
+                self.email_service.send_activation_code, email, activation_code
+            )
+        else:
+            # Fallback for tests or if background_tasks not provided
+            await self.email_service.send_activation_code(email, activation_code)
 
         logger.info(f"User registered successfully: {email} (ID: {new_user.id})")
         return new_user
@@ -113,12 +129,15 @@ class UserService:
         logger.info(f"User activated successfully: {email} (ID: {user.id})")
         return user
 
-    async def regenerate_activation_code(self, email: str) -> User:
+    async def regenerate_activation_code(
+        self, email: str, background_tasks: Optional[BackgroundTasks] = None
+    ) -> User:
         """
         Generate a new activation code for a user.
 
         Args:
             email: User's email address.
+            background_tasks: FastAPI BackgroundTasks for async email sending.
 
         Returns:
             The User object with updated activation code.
@@ -145,7 +164,13 @@ class UserService:
         user.activation_code_expires_at = expires_at
 
         await self.user_repo.update(user)
-        await self.email_service.send_activation_code(email, activation_code)
+
+        if background_tasks:
+            background_tasks.add_task(
+                self.email_service.send_activation_code, email, activation_code
+            )
+        else:
+            await self.email_service.send_activation_code(email, activation_code)
 
         logger.info(f"Activation code regenerated: {email} (ID: {user.id})")
         return user

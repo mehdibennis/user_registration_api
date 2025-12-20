@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
 from src.api.dependencies import get_current_user_email, get_user_service
 from src.api.schemas import (
@@ -26,7 +26,7 @@ router = APIRouter(tags=["Users"])
     summary="Register a new user",
     description="""
     Create a new user account with email and password.
-    
+
     A 4-digit activation code will be sent to the provided email address.
     The code expires after 1 minute.
     """,
@@ -37,10 +37,14 @@ router = APIRouter(tags=["Users"])
     },
 )
 async def register_user(
-    request: UserCreateRequest, service: UserService = Depends(get_user_service)
+    request: UserCreateRequest,
+    background_tasks: BackgroundTasks,
+    service: UserService = Depends(get_user_service),
 ):
     try:
-        user = await service.register_user(request.email, request.password)
+        user = await service.register_user(
+            request.email, request.password, background_tasks
+        )
         return UserResponse(id=user.id, email=user.email, is_active=user.is_active)
     except UserAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
@@ -52,10 +56,10 @@ async def register_user(
     summary="Activate user account",
     description="""
     Activate a user account using the 4-digit code received by email.
-    
+
     **Authentication**: Basic Auth (email:password)
-    
-    The activation code expires after 1 minute. If expired, use the 
+
+    The activation code expires after 1 minute. If expired, use the
     `/users/regenerate-code` endpoint to get a new code.
     """,
     responses={
@@ -89,9 +93,9 @@ async def activate_user(
     summary="Regenerate activation code",
     description="""
     Generate a new 4-digit activation code for a non-activated account.
-    
+
     **Authentication**: Basic Auth (email:password)
-    
+
     Use this endpoint if your previous activation code has expired.
     A new code will be sent to your email address.
     """,
@@ -103,11 +107,12 @@ async def activate_user(
     },
 )
 async def regenerate_code(
+    background_tasks: BackgroundTasks,
     email: str = Depends(get_current_user_email),
     service: UserService = Depends(get_user_service),
 ):
     try:
-        user = await service.regenerate_activation_code(email)
+        user = await service.regenerate_activation_code(email, background_tasks)
         return UserResponse(id=user.id, email=user.email, is_active=user.is_active)
     except UserNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

@@ -7,9 +7,8 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "user_registration"
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
-
-    SMTP_HOST: str = "localhost"
-    SMTP_PORT: int = 1025
+    DB_POOL_MIN_SIZE: int = 1
+    DB_POOL_MAX_SIZE: int = 10
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

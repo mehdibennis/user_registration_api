@@ -10,7 +10,7 @@ from src.main import app
 async def test_domain_exception_handler(client: AsyncClient):
     # Mock service to raise DomainError
     class MockService:
-        async def register_user(self, email, password):
+        async def register_user(self, email, password, background_tasks=None):
             raise DomainError("A generic domain error")
 
     # Override the dependency

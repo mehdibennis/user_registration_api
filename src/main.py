@@ -7,6 +7,7 @@ from src.api.routes import router
 from src.core.logging import get_logger
 from src.domain.exceptions import DomainError
 from src.infrastructure.database import db
+from src.service.security import shutdown_executor
 
 logger = get_logger(__name__)
 
@@ -21,6 +22,8 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down application")
     await db.disconnect()
     logger.info("Database connection closed")
+    shutdown_executor()
+    logger.info("Thread pool executor shutdown")
 
 
 API_DESCRIPTION = """
@@ -34,7 +37,7 @@ This API allows you to:
 
 ### Authentication
 
-The activation and code regeneration endpoints require **Basic Authentication** 
+The activation and code regeneration endpoints require **Basic Authentication**
 using the user's email and password.
 
 ### Activation Code

@@ -37,7 +37,10 @@ async def get_current_user_email(
             headers={"WWW-Authenticate": "Basic"},
         )
 
-    if not SecurityService.verify_password(credentials.password, user.password_hash):
+    is_valid = await SecurityService.verify_password(
+        credentials.password, user.password_hash
+    )
+    if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
